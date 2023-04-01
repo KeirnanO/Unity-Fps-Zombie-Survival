@@ -1,19 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
-public class Gun : MonoBehaviour
+public class NetworkGun : NetworkBehaviour
 {
     [SerializeField] LayerMask ShootableMask;
 
-    public AudioClip bulletSound;
+    public GameObject bulletSound;
     public GameObject hitMarkerSound;
     public GameObject BloodEffect;
 
     public Transform IKTargets;
 
     public Animator animator;
-    public AudioSource audioSource;
 
     public bool IsAiming;
 
@@ -24,9 +24,6 @@ public class Gun : MonoBehaviour
     public float FireRate; //Bullets Per Second
 
     public IKRig m_IKRig;
-
-    public bool automatic;
-    bool engaged = false;
 
     public int ammo;
     public int maxammo;
@@ -43,99 +40,28 @@ public class Gun : MonoBehaviour
         AssignIKTargets();
 
         animator = GetComponent<Animator>();
-        audioSource = GetComponent<AudioSource>();  
 
         //GunDatabase.RegisterGun(this, GunName);
+
+        gameObject.SetActive(false);
     }
 
-    //Fires a Blank - Useful for shooting on clients
+
+    //-----Local-----//
     public void Fire()
     {
-        if (ammoInClip <= 0)
-            return;
-
-        if (!automatic)
-        {
-            if (engaged)
-                return;
-
-            engaged = true;
-        }
-
-        if (Time.time < timetoFire)
-            return;
-
+        CmdFire();
         ammoInClip--;
-        audioSource.PlayOneShot(bulletSound);
-
-        recoil.ApplyRecoil();
-        cameraRecoil.ApplyRecoil();
-
-        timetoFire = Time.time + 1 / FireRate;
     }
 
-    //Fires a bullet in direction from a players position
-    //This "Bullet" can affect any ShootableObject it hits
-    //Only the Server should call this method in an online game
-    public void Fire(Vector3 position, Vector3 direction)
+    public void Reload()
     {
-        if (ammoInClip <= 0)
-            return;
+        CmdReload();
 
-        if (!automatic)
-        {
-            if (engaged)
-                return;
-
-            engaged = true;
-        }
-
-        if (Time.time < timetoFire)
-            return;
-
-        ammoInClip--;
-        audioSource.PlayOneShot(bulletSound);
-
-        if (Physics.Raycast(position, direction, out RaycastHit hit, 999f, ShootableMask))
-        {
-
-            if (hit.transform.CompareTag("Enemy"))
-            {
-                //Instantiate(hitMarkerSound, transform.position, Quaternion.identity);
-                //Transform effect = Instantiate(BloodEffect, hit.point, Quaternion.identity).transform;
-                //effect.LookAt(hit.point + hit.normal);
-
-                hit.transform.GetComponent<ShootableObject>().GetShot(damage * damageMultiplyer, 0);
-            }
-            else if (hit.transform.CompareTag("Player"))
-            {
-                //Instantiate(hitMarkerSound, transform.position, Quaternion.identity);
-                //Transform effect = Instantiate(BloodEffect, hit.point, Quaternion.identity).transform;
-                //effect.LookAt(hit.point + hit.normal);
-
-                hit.transform.GetComponent<NetworkPlayerController>().TakeDamage(damage * damageMultiplyer);
-            }
-        }
-
-        Debug.DrawRay(position, direction * 100, Color.red, 1f);
-
-        recoil.ApplyRecoil();
-        cameraRecoil.ApplyRecoil();
-
-        timetoFire = Time.time + 1 / FireRate;
-    }
-
-
-    public bool Reload()
-    {
-        if (ammo > 0 && ammoInClip < magSize)
+        if (ammo > 0 && ammoInClip <= magSize)
         {
             animator.SetBool("IsReloading", true);
-
-            return true;
         }
-
-        return false;
     }
 
     public void Aim(bool aimState)
@@ -155,13 +81,15 @@ public class Gun : MonoBehaviour
 
     public void ReloadAmmo()
     {
+        CmdReload();
+
         int fillAmount = magSize - ammoInClip;
 
-        if(ammo > fillAmount)
+        if (ammo > fillAmount)
         {
             ammo -= fillAmount;
 
-            ammoInClip = magSize;            
+            ammoInClip = magSize;
         }
         else
         {
@@ -173,6 +101,77 @@ public class Gun : MonoBehaviour
     public void RefillAmmo()
     {
         ammo = maxammo + (magSize - ammoInClip);
+    }
+    //-----Server----//
+    [Command]
+    void CmdFire()
+    {
+        if(ammoInClip > 0)
+        {
+            RpcFire();
+
+            ammoInClip--;
+        }
+        else
+        {
+            //DryFire();
+        }
+    }
+
+    [Command]
+    void CmdReload()
+    {
+        int fillAmount = magSize - ammoInClip;
+
+        if (ammo > fillAmount)
+        {
+            ammo -= fillAmount;
+
+            ammoInClip = magSize;
+        }
+        else
+        {
+            ammoInClip += ammo;
+            ammo = 0;
+        }
+    }
+
+    //-----Client----//
+    [ClientRpc]
+    void RpcFire()
+    {
+        if (Time.time > timetoFire && ammoInClip > 0)
+        {
+            ammoInClip--;
+            Instantiate(bulletSound, transform.position, Quaternion.identity);
+
+            Vector2 centerScreenPoint = new(Screen.width / 2, Screen.height / 2);
+            if (Physics.Raycast(Camera.main.ScreenPointToRay(centerScreenPoint), out RaycastHit hit, 999f, ShootableMask))
+            {
+
+                if (hit.transform.CompareTag("Enemy"))
+                {
+                    Instantiate(hitMarkerSound, transform.position, Quaternion.identity);
+                    Transform effect = Instantiate(BloodEffect, hit.point, Quaternion.identity).transform;
+                    effect.LookAt(hit.point + hit.normal);
+
+                    hit.transform.GetComponent<ShootableObject>().GetShot(damage * damageMultiplyer, 0);
+                }
+
+            }
+
+            recoil.ApplyRecoil();
+            cameraRecoil.ApplyRecoil();
+            //animator.SetTrigger("Fire");
+
+
+
+            timetoFire = Time.time + 1 / FireRate;
+        }
+        else
+        {
+            //Play mag empty sound
+        }
     }
 
 
@@ -215,10 +214,5 @@ public class Gun : MonoBehaviour
     public IKRig GetIKRig()
     {
         return m_IKRig;
-    }
-
-    public void Disengage()
-    {
-        engaged = false;
     }
 }

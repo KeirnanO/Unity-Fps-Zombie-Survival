@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using StarterAssets;
+using Cinemachine;
 
 public class AimController : MonoBehaviour
 {
@@ -9,8 +10,8 @@ public class AimController : MonoBehaviour
 
     public LayerMask InteractableLayerMask;
 
-    public GameObject StandardCamera;
-    public GameObject AimCamera;
+    public CinemachineVirtualCamera StandardCamera;
+    public CinemachineVirtualCamera AimCamera;
 
     public Loadout loadout;
 
@@ -75,27 +76,30 @@ public class AimController : MonoBehaviour
 
         if(input.aim)
         {
-            StandardCamera.SetActive(false);
-            AimCamera.SetActive(true);
+            StandardCamera.enabled = false;
+            AimCamera.enabled = true;
             loadout.GetCurrentGun().animator.SetBool("IsAiming", true);
             loadout.GetCurrentGun().Aim(true);
         }
         else
         {
-            StandardCamera.SetActive(true);
-            AimCamera.SetActive(false);
+            StandardCamera.enabled = true;
+            AimCamera.enabled = false;
             loadout.GetCurrentGun().animator.SetBool("IsAiming", false);
             loadout.GetCurrentGun().Aim(false);
         }
 
         if(input.fire)
         {
-            loadout.GetCurrentGun().Fire();
+            Vector2 centerScreenPointer = new(Screen.width / 2, Screen.height / 2);
+            Ray ray = Camera.main.ScreenPointToRay(centerScreenPointer);
+
+            loadout.GetCurrentGun().Fire(ray.origin, ray.direction);
             //loadout.SwapGuns();
         }
         else
         {
-
+            loadout.GetCurrentGun().Disengage();
         }
 
         

@@ -18,7 +18,6 @@ public class PlayerIKRig : MonoBehaviour
     {
         if (currentRig == null)
         {
-            print("No Gun Rig for player");
             return;
         }
 

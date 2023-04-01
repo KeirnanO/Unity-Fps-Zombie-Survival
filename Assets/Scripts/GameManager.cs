@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
 
-        player.loadout.PickUpGun(GunDatabase.GetRegisteredGun("M1911"));
+        player.loadout.EquipGun(player.loadout.WeaponArray[0]);
     }
 
     public void GivePlayerPoints(int points)

@@ -22,7 +22,7 @@ public class WallPurchase : Interactable
             }
             else
             {
-                GameManager.instance.GetPlayer().loadout.PickUpGun(purchasedGun);
+                GameManager.instance.GetPlayer().loadout.EquipGun(purchasedGun);
             }          
         }
     }

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Cinemachine;
+using Mirror;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -9,7 +11,7 @@ namespace StarterAssets
 #if ENABLE_INPUT_SYSTEM
 	[RequireComponent(typeof(PlayerInput))]
 #endif
-	public class FirstPersonController : MonoBehaviour
+	public class NetworkFirstPersonController : NetworkBehaviour
 	{
 		[Header("Player")]
 		[Tooltip("Move speed of the character in m/s")]
@@ -86,16 +88,40 @@ namespace StarterAssets
 			}
 		}
 
-		private void Awake()
-		{
-			if (_mainCamera == null)
-			{
-				_mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
-			}
-		}
+        private void Awake()
+        {
+			if (!isLocalPlayer)
+				return;
 
-		private void Start()
+			if(_mainCamera == null)
+            {
+				_mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            }
+        }
+
+        public override void OnStartLocalPlayer()
+        {
+			CinemachineCameraTarget = transform.GetChild(0).GetChild(0).gameObject;
+
+			GameObject.FindGameObjectWithTag("PlayerFollowCamera").GetComponent<CinemachineVirtualCamera>().Follow = CinemachineCameraTarget.transform;
+			GameObject.FindGameObjectWithTag("PlayerAimCamera").GetComponent<CinemachineVirtualCamera>().Follow = CinemachineCameraTarget.transform;
+        }
+
+        public override void OnStartAuthority()
+        {
+			base.OnStartAuthority();
+
+			PlayerInput playerInput = GetComponent<PlayerInput>();
+			playerInput.enabled = true;
+        }
+
+		float inputDelay;
+
+        private void Start()
 		{
+			if (!isLocalPlayer)
+				return;
+
 			_controller = GetComponent<CharacterController>();
 			_input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM
@@ -107,10 +133,15 @@ namespace StarterAssets
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+
+			inputDelay = Time.time + 1f;
 		}
 
 		public void Update()
 		{
+			if (!isLocalPlayer || Time.time < inputDelay)
+				return;
+
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
@@ -118,6 +149,9 @@ namespace StarterAssets
 
 		private void LateUpdate()
 		{
+			if (!isLocalPlayer)
+				return;
+
 			CameraRotation();
 		}
 
@@ -263,10 +297,5 @@ namespace StarterAssets
 			// when selected, draw a gizmo in the position of, and matching radius of, the grounded collider
 			Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - GroundedOffset, transform.position.z), GroundedRadius);
 		}
-
-		public void SetCamera(GameObject camera)
-        {
-			_mainCamera = camera;
-        }
 	}
 }

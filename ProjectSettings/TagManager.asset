@@ -6,6 +6,10 @@ TagManager:
   tags:
   - CinemachineTarget
   - Enemy
+  - PlayerFollowCamera
+  - PlayerAimCamera
+  - LocalPlayerSpace
+  - PlayerHUD
   layers:
   - Default
   - TransparentFX
@@ -20,7 +24,7 @@ TagManager:
   - Gun
   - Enemy
   - Interactable
-  - 
+  - EnemyGun
   - 
   - 
   - 

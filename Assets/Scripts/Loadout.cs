@@ -1,26 +1,59 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Mirror;
 
 public class Loadout : MonoBehaviour
 {
     public Gun[] guns = new Gun[2];
 
-    int gunNum;
-    PlayerIKRig playerRig;
+    int gunNum = 0;
+    Gun currentGun;
 
-    private void Awake()
+    public PlayerIKRig playerRig;
+
+    public Gun[] WeaponArray;
+
+    public void EquipGun(Gun gun)
     {
-        playerRig = FindObjectOfType<PlayerIKRig>();        
+        if (gun == currentGun)
+            return;
+
+        if (currentGun != null)
+            StartCoroutine(DequipGun());
+
+        if(gun == null)
+        {
+            guns[gunNum] = null;
+            currentGun = null;
+            return;
+        }
+
+        if (guns[0] == gun || guns[0] == null)
+        {
+            guns[0] = gun;
+            StartCoroutine(EquipGun(0));
+        }
+        else if (guns[1] == gun || guns[1] == null)
+        {
+            guns[1] = gun;
+            StartCoroutine(EquipGun(1));
+        }
+        else
+        {
+            guns[gunNum] = gun;
+            StartCoroutine(EquipGun(gunNum));
+        }
     }
 
     IEnumerator EquipGun(int gunNum)
     {
-        playerRig.SetIKRig(guns[gunNum].GetIKRig());
-
         guns[gunNum].gameObject.SetActive(true);
-        guns[gunNum].GetComponent<Gun>().enabled = true;
 
+        this.gunNum = gunNum;
+        playerRig.SetIKRig(guns[gunNum].GetIKRig());        
+        guns[gunNum].GetComponent<Gun>().enabled = true;
+        currentGun = guns[gunNum];
         yield return null;
         
         playerRig.SetHidden(false);
@@ -28,10 +61,13 @@ public class Loadout : MonoBehaviour
 
     IEnumerator DequipGun()
     {
-        guns[gunNum].Dequip();
-        //guns[gunNum].GetComponent<Gun>().enabled = false;
+        if (guns[gunNum])
+        {
+            guns[gunNum].Dequip();
+            //guns[gunNum].GetComponent<Gun>().enabled = false;
 
-        yield return new WaitUntil(() => guns[gunNum].gameObject.activeSelf == false);
+            yield return new WaitUntil(() => guns[gunNum].gameObject.activeSelf == false);
+        }
     }
 
     public void PickUpGun(Gun gun)
