@@ -10,6 +10,7 @@ TagManager:
   - PlayerAimCamera
   - LocalPlayerSpace
   - PlayerHUD
+  - ChestSpawns
   layers:
   - Default
   - TransparentFX

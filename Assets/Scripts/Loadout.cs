@@ -7,8 +7,8 @@ public class Loadout : MonoBehaviour
 {
     public Gun[] guns = new Gun[2];
 
-    int gunNum = 0;
-    Gun currentGun;
+    [SerializeField] int gunNum = 0;
+    [SerializeField] Gun currentGun;
 
     public PlayerIKRig playerRig;
 
@@ -16,18 +16,14 @@ public class Loadout : MonoBehaviour
 
     public void EquipGun(Gun gun)
     {
-        if (gun == currentGun)
+        if (gun == currentGun && currentGun != null)
+        {
+            gun.RefillAmmo();
             return;
+        }
 
         if (currentGun != null)
             StartCoroutine(DequipGun());
-
-        if(gun == null)
-        {
-            guns[gunNum] = null;
-            currentGun = null;
-            return;
-        }
 
         if (guns[0] == gun || guns[0] == null)
         {
@@ -48,15 +44,23 @@ public class Loadout : MonoBehaviour
 
     IEnumerator EquipGun(int gunNum)
     {
-        guns[gunNum].gameObject.SetActive(true);
+        if (guns[gunNum] == null)
+        {
+            currentGun = guns[gunNum];
+            playerRig.SetHidden(true);
+        }
+        else
+        {
+            guns[gunNum].gameObject.SetActive(true);
 
-        this.gunNum = gunNum;
-        playerRig.SetIKRig(guns[gunNum].GetIKRig());        
-        guns[gunNum].GetComponent<Gun>().enabled = true;
-        currentGun = guns[gunNum];
-        yield return null;
-        
-        playerRig.SetHidden(false);
+            this.gunNum = gunNum;
+            playerRig.SetIKRig(guns[gunNum].GetIKRig());
+            guns[gunNum].GetComponent<Gun>().enabled = true;
+            currentGun = guns[gunNum];
+            yield return null;
+
+            playerRig.SetHidden(false);
+        }
     }
 
     IEnumerator DequipGun()
@@ -122,7 +126,7 @@ public class Loadout : MonoBehaviour
 
     public Gun GetCurrentGun()
     {
-        return guns[gunNum];
+        return currentGun;
     }
 
     public bool HasGun(Gun _gun)

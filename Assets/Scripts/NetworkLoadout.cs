@@ -2,134 +2,208 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using Cinemachine;
 
 public class NetworkLoadout : NetworkBehaviour
 {
-    public NetworkGun[] guns = new NetworkGun[2];
+    [Header("Loadout")]
+    [SyncVar(hook = nameof(HandleWeaponChange))]
+    [SerializeField] private int currentGun;
+    [SerializeField] private Gun[] gunArray;
 
-    int gunNum;
+    [Header("Player")]
+    [SerializeField] private PlayerIKRig playerRig = null;
 
-    [SerializeField]
-    PlayerIKRig playerRig;
+    [Header("Camera")]
+    [SerializeField] private CinemachineVirtualCamera normalCamera;
+    [SerializeField] private CinemachineVirtualCamera aimCamera;
 
-    private void Start()
+    private Controls controls;
+
+    private Controls Controls
     {
-        StartCoroutine(EquipGun(0));
-    }
-
-    //-----Local-----//
-    public void PickUpGun(NetworkGun gun)
-    {
-        CmdPickUpGun();
-    }
-
-    public void SwapGuns()
-    {
-        CmdSwapGuns();
-    }
-
-    IEnumerator EquipGun(int gunNum)
-    {
-        playerRig.SetIKRig(guns[gunNum].GetIKRig());
-
-        guns[gunNum].gameObject.SetActive(true);
-        guns[gunNum].GetComponent<NetworkGun>().enabled = true;
-
-        yield return null;
-
-        playerRig.SetHidden(false);
-    }
-
-    IEnumerator DequipGun()
-    {
-        guns[gunNum].Dequip();
-        //guns[gunNum].GetComponent<Gun>().enabled = false;
-
-        yield return new WaitUntil(() => guns[gunNum].gameObject.activeSelf == false);
-    }
-
-    IEnumerator GunPickUp(NetworkGun gun)
-    {
-        if (guns[0] == null)
+        get
         {
-            guns[0] = gun;
-            yield return StartCoroutine(EquipGun(0));
+            if (controls != null) { return controls; }
+            return controls = new Controls();
         }
-        else if (guns[1] == null)
+    }
+
+    bool firing;
+
+    public override void OnStartAuthority()
+    {
+        enabled = true;
+
+        Controls.Player.Fire.started += ctx => StartFire();
+        Controls.Player.Fire.canceled += ctx => StopFire();
+
+        Controls.Player.Aim.started += ctx => StartAim();
+        Controls.Player.Aim.canceled += ctx => EndAim();
+
+        controls.Player.Reload.started += ctx => Reload(true);
+        controls.Player.Reload.canceled += ctx => Reload(false);
+
+        controls.Player.Sprint.started += ctx => Sprint(true);
+        controls.Player.Sprint.canceled += ctx => Sprint(false);
+    }
+
+    public override void OnStartServer()
+    {
+        HandleWeaponChange(0 ,currentGun);
+    }
+
+
+    void Reload(bool state)
+    {
+        if (gunArray[currentGun] == null)
+            return;
+
+        if (state)
+            gunArray[currentGun].Reload();
+        else
+            gunArray[currentGun].animator.SetBool("IsReloading", state);
+    }
+
+    void Sprint(bool state)
+    {
+        if (gunArray[currentGun] == null)
+            return;
+
+        gunArray[currentGun].animator.SetBool("IsSprinting", state);
+    }
+
+    public void HandleWeaponChange(int _oldvalue, int _newvalue) => EquipGun(_oldvalue, _newvalue);
+
+    [ClientCallback]
+    private void OnEnable() => Controls.Enable();
+    [ClientCallback]
+    private void OnDisable() => Controls.Disable();
+    [ClientCallback]
+    private void Update()
+    {
+        if (firing && currentGun != 0)
+            CmdFire(Camera.main.transform.position, Camera.main.transform.forward);
+        else if (currentGun != 0 && !firing)
         {
-            guns[1] = gun;
-            SwapGuns();
+            gunArray[currentGun].Disengage();
+            CmdDisengage();
+        }
+    }
+
+    [Client]
+    private void StartAim()
+    {
+        normalCamera.enabled = false;
+        aimCamera.enabled = true;
+
+        gunArray[currentGun].animator.SetBool("IsAiming", true);
+    }
+    [Client]
+    private void EndAim()
+    {
+        aimCamera.enabled = false;
+        normalCamera.enabled = true;
+
+        gunArray[currentGun].animator.SetBool("IsAiming", false);
+    }
+
+    [Command]
+    private void CmdFire(Vector3 position, Vector3 direction)
+    {
+        gunArray[currentGun].Fire(position, direction);
+        RpcFire();
+    }
+
+    [Server]
+    public void GiveGun(int gunIndex)
+    {
+        currentGun = gunIndex;
+    }
+
+    [Command]
+    public void CmdGiveGun(int gunIndex)
+    {
+        currentGun = gunIndex;
+    }
+
+    [Command]
+    private void CmdDisengage()
+    {
+        gunArray[currentGun].Disengage();
+    }
+
+    [ClientRpc]
+    private void RpcFire()
+    {
+        gunArray[currentGun].Fire();
+    }
+
+    [Client]
+    private void StartFire()
+    {
+        firing = true;
+    }
+
+    [Client]
+    private void StopFire()
+    {
+        firing = false;
+    }
+
+    [Client]
+    public void EquipGun(int oldIndex, int gunIndex)
+    {
+        StopAllCoroutines();
+        StartCoroutine(EquipCore(oldIndex, gunIndex));
+    }
+
+    IEnumerator EquipCore(int oldIndex, int gunIndex)
+    {
+        //If we are told to e
+        if (oldIndex == gunIndex && gunIndex != 0)
+        {
+            gunArray[gunIndex].RefillAmmo();
+            StopAllCoroutines();
+        }
+
+        if (oldIndex != 0)
+        {
+            print("Dequipping");
+            yield return StartCoroutine(DequipGun(oldIndex));
+            print("Dequipped");
+        }
+
+        print("Equipping");
+        yield return StartCoroutine(StartEquip(gunIndex));
+        print("Equipped");
+    }
+
+    IEnumerator StartEquip(int gunIndex)
+    {
+        if (gunArray[gunIndex] == null)
+        {
+            playerRig.SetHidden(true);
         }
         else
         {
-            guns[gunNum] = gun;
+            gunArray[gunIndex].gameObject.SetActive(true);
+            playerRig.SetIKRig(gunArray[gunIndex].GetIKRig());
+            gunArray[gunIndex].enabled = true;
+            yield return null;
 
-            yield return StartCoroutine(DequipGun());
-            yield return StartCoroutine(EquipGun(gunNum));
+            playerRig.SetHidden(false);
         }
     }
 
-    IEnumerator Swap(NetworkGun gun)
+    IEnumerator DequipGun(int gunIndex)
     {
-        yield return StartCoroutine(DequipGun());
-
-        playerRig.SetIKRig(null);
-        playerRig.SetHidden(true);
-
-        gunNum = (gunNum + 1) % guns.Length;
-
-        yield return StartCoroutine(EquipGun(gunNum));
-    }
-
-    public NetworkGun GetCurrentGun()
-    {
-        return guns[gunNum];
-    }
-
-    public bool HasGun(NetworkGun _gun)
-    {
-        foreach (NetworkGun gun in guns)
+        if (gunIndex != 0)
         {
-            if (gun == _gun)
-            {
-                return true;
-            }
+            gunArray[gunIndex].Dequip();
+
+            yield return new WaitUntil(() => gunArray[gunIndex].gameObject.activeSelf == false);
         }
-
-        return false;
-    }
-
-    //-----Server-----//
-    [Command]
-    void CmdPickUpGun()
-    {
-        RpcPickUpGun();
-    }
-
-    [Command]
-    void CmdSwapGuns()
-    {
-        RpcSwapGuns();
-    }
-
-    //------Client-----//
-    [ClientRpc]
-    void RpcPickUpGun()
-    {
-        StopAllCoroutines();
-        //StartCoroutine(GunPickUp());
-    }
-
-    [ClientRpc]
-    void RpcSwapGuns()
-    {
-        NetworkGun gun = guns[(gunNum + 1) % guns.Length];
-
-        if (gun == null || gun == guns[gunNum])
-            return;
-
-        StopAllCoroutines();
-        StartCoroutine(Swap(gun));
     }
 
 }

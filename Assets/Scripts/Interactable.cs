@@ -6,6 +6,7 @@ public class Interactable : MonoBehaviour
 {
     public string toolTip = "Hold 'E' to";
 
+
     public virtual void Interact()
     {
 

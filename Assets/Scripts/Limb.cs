@@ -12,8 +12,6 @@ public class Limb : ShootableObject
     {
         base.GetShot(damage, force);
 
-        EnemyController enemy = GetComponentInParent<EnemyController>();
-        
-        enemy.TakeDamage(damage * damageMultiplyer, isHead);        
+        GetComponentInParent<Damageable>().DealDamage(damage * damageMultiplyer);  
     }
 }

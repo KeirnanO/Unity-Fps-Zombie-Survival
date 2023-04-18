@@ -5,6 +5,7 @@ using StarterAssets;
 using Cinemachine;
 using Mirror;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class NetworkPlayerController : NetworkBehaviour
 {
@@ -63,7 +64,7 @@ public class NetworkPlayerController : NetworkBehaviour
     public override void OnStartAuthority()
     {
         FindObjectOfType<Canvas>().enabled = true;
-        FindObjectOfType<ClientUIHandler>().SetPlayer(this);
+        //FindObjectOfType<ClientUIHandler>().SetPlayer(this);
         ChatBox.instance.SetPlayer(this);
 
         SetGameLayerRecursive(arms.gameObject, LayerMask.NameToLayer("Gun"));
@@ -77,11 +78,14 @@ public class NetworkPlayerController : NetworkBehaviour
         AimCamera = GameObject.FindGameObjectWithTag("PlayerAimCamera").GetComponent<CinemachineVirtualCamera>();
 
         input = GetComponent<StarterAssetsInputs>();
-
+        
         CmdSetPlayerName(PlayerPrefs.GetString("PlayerName", "Guest" + Random.Range(100, 999)));
+        SendChatMessage("Has Joined The Game");
 
         health = maxHealth;
         points = startingPoints;
+
+        input.cursorLocked = true;
 
         inputDelay = Time.time + 1f;
     }
@@ -96,16 +100,14 @@ public class NetworkPlayerController : NetworkBehaviour
         base.OnStartClient();
     }
 
-
-
     private void Start()
     {
         loadout = GetComponent<Loadout>();
 
         if (isOwned)
         {
-            SendChatMessage("Asking Server For Gun");
-            CmdGivePlayerGun(1);
+            //SendChatMessage("Asking Server For Gun");
+            CmdGivePlayerGun(0);
         }
     }
 
@@ -114,12 +116,12 @@ public class NetworkPlayerController : NetworkBehaviour
         EnsureInit();
 
         if (isOwned)
-            SendChatMessage("Recieved Gun[" + _new + "]!");
+            //SendChatMessage("Recieved Gun[" + _new + "]!");
 
         currentGunIndex = _new;
         loadout.EquipGun(loadout.WeaponArray[_new]);
 
-        SendChatMessage("Syncing Guns Complete!");
+        //SendChatMessage("Syncing Guns Complete!");
     }
 
     private void OnHealthChange(float _old, float _new)
@@ -156,21 +158,27 @@ public class NetworkPlayerController : NetworkBehaviour
             debugTransform.position = hit.point;
         }
 
-        if (Physics.Raycast(Camera.main.ScreenPointToRay(centerScreenPoint), out hit, 1f, InteractableLayerMask))
+        if (Physics.Raycast(Camera.main.ScreenPointToRay(centerScreenPoint), out hit, 2f, InteractableLayerMask))
         {
-            Interactable interactable = hit.transform.GetComponent<Interactable>();
-            GameManager.instance.DisplayToolTip(interactable.GetTooltip());
+            NetworkInteractable interactable = hit.transform.GetComponent<NetworkInteractable>();
+            ClientUIHandler.instance.DisplayToolTip(interactable.GetTooltip());
 
             if (input.interact)
             {
-                interactable.Interact();
+                interactable.Interact(netId);
                 input.interact = false;
             }
         }
         else
         {
-            //GameManager.instance.DisplayToolTip("");
+            ClientUIHandler.instance.DisplayToolTip("");
         }
+    }
+
+    [Server]
+    public void ServerGivePlayerGun(int gunIndex)
+    {
+        RpcGivePlayerGun(gunIndex);
     }
 
     void HandleInputs()
@@ -250,6 +258,11 @@ public class NetworkPlayerController : NetworkBehaviour
 
         timeToRegen = Time.time + regenTime;
         regenerating = false;
+
+        if(health <= 0)
+        {
+            
+        }
     }
 
     [Server]
@@ -346,7 +359,7 @@ public class NetworkPlayerController : NetworkBehaviour
     [Command]
     void CmdGivePlayerGun(int gunIndex)
     {
-        SendServerMessage("Server Giving " + playerName + " Gun[" + gunIndex + "]");
+        //SendServerMessage("Server Giving " + playerName + " Gun[" + gunIndex + "]");
         //currentGunIndex = gunIndex;
         RpcGivePlayerGun(gunIndex);
     }
@@ -372,12 +385,12 @@ public class NetworkPlayerController : NetworkBehaviour
     [ClientRpc]
     void RpcGivePlayerGun(int gunIndex)
     {
-        SendChatMessage(playerName + " Recieved Gun[" + gunIndex + "]!");
+        //SendChatMessage(playerName + " Recieved Gun[" + gunIndex + "]!");
 
         currentGunIndex = gunIndex;
         loadout.EquipGun(loadout.WeaponArray[gunIndex]);
 
-        SendChatMessage("Syncing Guns Complete!");
+        //SendChatMessage("Syncing Guns Complete!");
     }
 
     [Command]
@@ -478,5 +491,12 @@ public class NetworkPlayerController : NetworkBehaviour
     public float GetHealth()
     {
         return health;
+    }
+
+    [TargetRpc]
+    public void RemovePlayer(NetworkConnectionToClient conn)
+    {
+        conn.Disconnect();
+        Application.Quit();
     }
 }

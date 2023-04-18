@@ -34,7 +34,6 @@ public class Gun : MonoBehaviour
     public int magSize;
 
     public float damage;
-    float damageMultiplyer = 1;
 
     public string GunName;
 
@@ -74,8 +73,9 @@ public class Gun : MonoBehaviour
         timetoFire = Time.time + 1 / FireRate;
     }
 
+
     //Fires a bullet in direction from a players position
-    //This "Bullet" can affect any ShootableObject it hits
+    //This "Bullet" can affect Objects it hits
     //Only the Server should call this method in an online game
     public void Fire(Vector3 position, Vector3 direction)
     {
@@ -98,22 +98,13 @@ public class Gun : MonoBehaviour
 
         if (Physics.Raycast(position, direction, out RaycastHit hit, 999f, ShootableMask))
         {
-
-            if (hit.transform.CompareTag("Enemy"))
+            if (hit.transform.CompareTag("Enemy") || hit.transform.CompareTag("Player"))
             {
                 //Instantiate(hitMarkerSound, transform.position, Quaternion.identity);
                 //Transform effect = Instantiate(BloodEffect, hit.point, Quaternion.identity).transform;
                 //effect.LookAt(hit.point + hit.normal);
 
-                hit.transform.GetComponent<ShootableObject>().GetShot(damage * damageMultiplyer, 0);
-            }
-            else if (hit.transform.CompareTag("Player"))
-            {
-                //Instantiate(hitMarkerSound, transform.position, Quaternion.identity);
-                //Transform effect = Instantiate(BloodEffect, hit.point, Quaternion.identity).transform;
-                //effect.LookAt(hit.point + hit.normal);
-
-                hit.transform.GetComponent<NetworkPlayerController>().TakeDamage(damage * damageMultiplyer);
+                hit.transform.GetComponent<Limb>().GetShot(damage, 0);
             }
         }
 
