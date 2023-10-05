@@ -13,6 +13,7 @@ public class Gun : MonoBehaviour
     public Transform IKTargets;
 
     public Animator animator;
+    public Animator clientAnimator;
     public AudioSource audioSource;
 
     public bool IsAiming;
@@ -122,6 +123,7 @@ public class Gun : MonoBehaviour
         if (ammo > 0 && ammoInClip < magSize)
         {
             animator.SetBool("IsReloading", true);
+            clientAnimator.SetBool("IsReloading", true);
 
             return true;
         }
@@ -137,6 +139,7 @@ public class Gun : MonoBehaviour
     public void Dequip()
     {
         animator.SetTrigger("Dequip");
+        clientAnimator.SetTrigger("Dequip");
     }
 
     public void SetInActive()

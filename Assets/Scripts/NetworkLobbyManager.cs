@@ -9,6 +9,7 @@ public class NetworkLobbyManager : NetworkManager
 {
     [SerializeField] private int minPlayers = 2;
     [SerializeField] private string menuScene = string.Empty;
+    [SerializeField] private string gameScene = string.Empty;
 
     [Header("Room")]
     [SerializeField] private NetworkLobbyPlayerController lobbyPlayerPrefab = null;
@@ -22,9 +23,9 @@ public class NetworkLobbyManager : NetworkManager
     public static event Action OnClientConnected;
     public static event Action OnClientDisconnected;
     public static event Action<NetworkConnectionToClient> OnServerReadied;
-
+     
     public List<NetworkLobbyPlayerController> LobbyPlayers { get; } = new List<NetworkLobbyPlayerController>();
-    public List<NetworkGamePlayer> GamePlayers { get; } = new List<NetworkGamePlayer>();
+    public List<NetworkGamePlayer> GamePlayers;//{ get; } = new List<NetworkGamePlayer>();
 
     public override void OnClientConnect()
     {   
@@ -110,14 +111,14 @@ public class NetworkLobbyManager : NetworkManager
         {
             if(!IsReadyToStart()) { return; }
 
-            ServerChangeScene("Scene_Map_01");
+            ServerChangeScene(gameScene);
         }
     }
 
     public override void ServerChangeScene(string newSceneName)
     {
 
-        if (SceneManager.GetActiveScene().name == menuScene && newSceneName.StartsWith("Scene_Map"))
+        if (SceneManager.GetActiveScene().name == menuScene && newSceneName.StartsWith("Scene_"))
         {
             for (int i = LobbyPlayers.Count - 1; i >= 0; i--)
             {
@@ -132,7 +133,6 @@ public class NetworkLobbyManager : NetworkManager
                 conn.isReady = false;
             }
         }
-
         
         base.ServerChangeScene(newSceneName);
     }
@@ -165,9 +165,18 @@ public class NetworkLobbyManager : NetworkManager
 
         if (CheckGameReady())
         {
+            //Crib game
+            //CribbageCarGameManager.instance.StartGameLoop();
+
             for (int i = GamePlayers.Count - 1; i >= 0; i--)
-            {             
-                GamePlayers[i].GetComponent<NetworkMovementController>().SetPositionAndRotation(NetworkPlayerSpawnSystem.spawnPoints[i].position, NetworkPlayerSpawnSystem.spawnPoints[i].rotation);
+            {
+                //RPG Games
+                GamePlayers[i].GetComponent<NetworkMovementController>().RpcSetPositionAndRotation(NetworkPlayerSpawnSystem.spawnPoints[i].position, NetworkPlayerSpawnSystem.spawnPoints[i].rotation);
+
+                //Board Game
+                //AzulGameManager.instance.SetUpGame();
+                //
+                
             }
         }
     }

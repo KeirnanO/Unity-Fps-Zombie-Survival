@@ -26,7 +26,7 @@ public class NetworkEnemySpawnSystem : NetworkBehaviour
         {
             for (int i = 0; i < Mathf.Min(difficulty * 10, 30); i++)
             {
-                SpawnZombie();                
+                //SpawnZombie();                
             }
 
             _spawnTimeoutDelta = Time.time + spawnTime;

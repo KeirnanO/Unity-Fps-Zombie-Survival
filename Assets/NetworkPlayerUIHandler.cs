@@ -17,7 +17,6 @@ public class NetworkPlayerUIHandler : NetworkBehaviour
     public GameObject pointsPrefab;
     public GameObject negativePointsPrefab;
     public Transform pointsLocation;
-
     public GameObject canvas;
 
 

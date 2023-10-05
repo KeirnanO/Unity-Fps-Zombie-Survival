@@ -12,6 +12,8 @@ public class Limb : ShootableObject
     {
         base.GetShot(damage, force);
 
-        GetComponentInParent<Damageable>().DealDamage(damage * damageMultiplyer);  
+       GetComponentInParent<Damageable>().DealDamage(damage * damageMultiplyer);
+
+        print(transform + "Got shot for " + damage * damageMultiplyer + " damage!");
     }
 }

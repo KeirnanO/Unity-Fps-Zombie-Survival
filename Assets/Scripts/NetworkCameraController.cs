@@ -68,4 +68,13 @@ public class NetworkCameraController : NetworkBehaviour
 		if (lfAngle > 360f) lfAngle -= 360f;
 		return Mathf.Clamp(lfAngle, lfMin, lfMax);
 	}
+
+	[ClientRpc]
+	public void RpcSetEnabled(bool enabled)
+	{
+		if (!isOwned)
+			return;
+
+		this.enabled = enabled;
+	}
 }

@@ -10,8 +10,8 @@ using System;
 using System.Linq;
 [ExecuteInEditMode]
 public class LightingTools_Offer : MonoBehaviour {
-
-	WWW www;
+    [Obsolete]
+    WWW www;
 	[Space(3)]
 	// Button sprites
 	[HideInInspector] public Texture[] targetTextures;
@@ -44,7 +44,8 @@ public class LightingTools_Offer : MonoBehaviour {
 
 	}
 
-	public void Reload()
+    [Obsolete]
+    public void Reload()
 	{
 		StopCoroutine (ReadLinks());
 		StopCoroutine (ReadImages ());
@@ -62,7 +63,9 @@ public class LightingTools_Offer : MonoBehaviour {
 	}
 
 	int loaded;
-	IEnumerator ReadImages()
+
+    [Obsolete]
+    IEnumerator ReadImages()
 	{
 		for(int b = 0;b<ImagesURL.Length;b++)
 		{

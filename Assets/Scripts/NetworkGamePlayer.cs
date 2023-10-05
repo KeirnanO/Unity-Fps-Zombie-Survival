@@ -10,6 +10,8 @@ public class NetworkGamePlayer : NetworkBehaviour
 
     [Header("Player's Local Space")]
     [SerializeField] private GameObject localSpace;
+    [Header("Player model that other clients see")]
+    [SerializeField] private GameObject clientPlayerObject;
 
     private NetworkLobbyManager lobby;
     private NetworkLobbyManager Lobby
@@ -21,13 +23,18 @@ public class NetworkGamePlayer : NetworkBehaviour
         }
     }
 
+    public override void OnStartLocalPlayer()
+    {
+        if(localSpace != null)
+            SetGameLayerRecursive(localSpace, LayerMask.NameToLayer("Gun"));
+        //SetMeshRendererRecursive(clientPlayerObject, false);
+    }
+
     public override void OnStartClient()
     {
         DontDestroyOnLoad(gameObject);
 
         Lobby.GamePlayers.Add(this);
-
-        SetGameLayerRecursive(localSpace, LayerMask.NameToLayer("Gun"));
     }
 
     public override void OnStopServer()
@@ -53,5 +60,28 @@ public class NetworkGamePlayer : NetworkBehaviour
                 SetGameLayerRecursive(child.gameObject, _layer);
 
         }
+    }
+
+    void SetMeshRendererRecursive(GameObject _go, bool enabled)
+    {
+        var renderer = _go.GetComponent<SkinnedMeshRenderer>();
+
+        if (renderer)
+        {
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+        }
+
+        foreach (Transform child in _go.transform)
+        {
+            Transform _HasChildren = child.GetComponentInChildren<Transform>();
+            if (_HasChildren != null)
+                SetMeshRendererRecursive(child.gameObject, enabled);
+
+        }
+    }
+
+    public string GetDisplayName()
+    {
+        return displayName;
     }
 }

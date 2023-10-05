@@ -10,9 +10,11 @@ public class NetworkLoadout : NetworkBehaviour
     [SyncVar(hook = nameof(HandleWeaponChange))]
     [SerializeField] private int currentGun;
     [SerializeField] private Gun[] gunArray;
+    [SerializeField] private GameObject[] clientGunArray;
 
     [Header("Player")]
-    [SerializeField] private PlayerIKRig playerRig = null;
+    [SerializeField] private PlayerIKRig localPlayerRig = null;
+    [SerializeField] private PlayerIKRig clientPlayerRig = null;
 
     [Header("Camera")]
     [SerializeField] private CinemachineVirtualCamera normalCamera;
@@ -63,6 +65,7 @@ public class NetworkLoadout : NetworkBehaviour
             gunArray[currentGun].Reload();
         else
             gunArray[currentGun].animator.SetBool("IsReloading", state);
+            gunArray[currentGun].clientAnimator.SetBool("IsReloading", state);
     }
 
     void Sprint(bool state)
@@ -71,6 +74,7 @@ public class NetworkLoadout : NetworkBehaviour
             return;
 
         gunArray[currentGun].animator.SetBool("IsSprinting", state);
+        gunArray[currentGun].clientAnimator.SetBool("IsSprinting", state);
     }
 
     public void HandleWeaponChange(int _oldvalue, int _newvalue) => EquipGun(_oldvalue, _newvalue);
@@ -98,6 +102,7 @@ public class NetworkLoadout : NetworkBehaviour
         aimCamera.enabled = true;
 
         gunArray[currentGun].animator.SetBool("IsAiming", true);
+        gunArray[currentGun].clientAnimator.SetBool("IsAiming", true);
     }
     [Client]
     private void EndAim()
@@ -106,6 +111,7 @@ public class NetworkLoadout : NetworkBehaviour
         normalCamera.enabled = true;
 
         gunArray[currentGun].animator.SetBool("IsAiming", false);
+        gunArray[currentGun].clientAnimator.SetBool("IsAiming", false);
     }
 
     [Command]
@@ -183,16 +189,20 @@ public class NetworkLoadout : NetworkBehaviour
     {
         if (gunArray[gunIndex] == null)
         {
-            playerRig.SetHidden(true);
+            localPlayerRig.SetHidden(true);
         }
         else
         {
             gunArray[gunIndex].gameObject.SetActive(true);
-            playerRig.SetIKRig(gunArray[gunIndex].GetIKRig());
+            localPlayerRig.SetIKRig(gunArray[gunIndex].GetIKRig());
             gunArray[gunIndex].enabled = true;
+
+
+            clientGunArray[gunIndex].SetActive(true);
+            clientPlayerRig.SetIKRig(clientGunArray[gunIndex].GetComponent<IKRig>());
             yield return null;
 
-            playerRig.SetHidden(false);
+            localPlayerRig.SetHidden(false);
         }
     }
 
@@ -201,6 +211,8 @@ public class NetworkLoadout : NetworkBehaviour
         if (gunIndex != 0)
         {
             gunArray[gunIndex].Dequip();
+
+            clientGunArray[gunIndex].GetComponent<Animator>().SetTrigger("Dequip");
 
             yield return new WaitUntil(() => gunArray[gunIndex].gameObject.activeSelf == false);
         }

@@ -16,6 +16,8 @@ public class MainMenu : MonoBehaviour
 
     private const string PlayerPrefsNameKey = "PlayerName";
 
+    private const string IPToConnect = "99.225.172.211";
+
     [SerializeField] private TMP_InputField ipAddressInputField = null;
     [SerializeField] private Button joinButton = null;
 
@@ -53,7 +55,11 @@ public class MainMenu : MonoBehaviour
         joinButton.interactable = true;
     }
 
-    private void Start() => SetUpInputField();
+    private void Start()
+    {
+        SetUpInputField();
+        ipAddressInputField.text = IPToConnect;
+    }
 
     private void SetUpInputField()
     {

@@ -60,7 +60,18 @@ public class Health : NetworkBehaviour
     [ClientRpc]
     private void RpcHandleDeath()
     {
-        gameObject.SetActive(false);
+        print("A Player Died");
+        //gameObject.SetActive(false);
     }
+
+    public float GetHealth()
+    {
+        return health;
+    }
+
+    public float GetMaxHealth()
+    {
+        return maxHealth;
+    } 
 
 }

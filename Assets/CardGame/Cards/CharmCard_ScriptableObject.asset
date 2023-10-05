@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: edd2550db2b95eb47a7b0a99d8359b2a, type: 3}
+  m_Name: CharmCard_ScriptableObject
+  m_EditorClassIdentifier: 
+  name: Empower
+  description: +40% damage next Attack
+  manaCost: 
+  cardType: 3
+  attack: 0
+  AOE: 0
+  cardID: 4
+  upgradedCard: {fileID: 11400000}
+  animationObject: {fileID: 5447507238873467915, guid: d0d3e38b530f3724682c9316ff40556f,
+    type: 3}
+  cardSprite: {fileID: 591724950, guid: 365b05f4336b85242824526625fc58a0, type: 3}
