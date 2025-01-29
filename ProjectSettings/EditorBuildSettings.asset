@@ -20,7 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Menus.unity
     guid: 8e12b749c0019354ba5fab1c7a4422fd
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Scene_Map_01.unity
     guid: dbae276200974ee4ab039eeaf6bc7e9c
   - enabled: 0
@@ -32,6 +32,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Scene_Map_02.unity
     guid: 7e7a4cc58d55e3b4a85e35d5da1c4179
+  - enabled: 1
+    path: Assets/Scenes/Scene_Map_Factory.unity
+    guid: 4fdaec05e64212646b37fe2476aa70cd
   m_configObjects:
-    com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7,
+    com.unity.input.settings: {fileID: 11400000, guid: 309da95e71d48b245a11ac4a752e573c,
       type: 2}

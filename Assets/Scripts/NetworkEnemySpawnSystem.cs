@@ -19,6 +19,17 @@ public class NetworkEnemySpawnSystem : NetworkBehaviour
 
     int difficulty = 1;
 
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+
+        for(int i = 0; i < 70; i++)
+        {
+            SpawnZombie();
+        }
+    }
+
+    /*
     [ServerCallback]
     private void Update()
     {
@@ -26,13 +37,14 @@ public class NetworkEnemySpawnSystem : NetworkBehaviour
         {
             for (int i = 0; i < Mathf.Min(difficulty * 10, 30); i++)
             {
-                //SpawnZombie();                
+                SpawnZombie();                
             }
 
             _spawnTimeoutDelta = Time.time + spawnTime;
             difficulty++;
         }
     }
+    */
 
     [Server]
     public void SpawnZombie()

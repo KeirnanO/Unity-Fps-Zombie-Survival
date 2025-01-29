@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class GunRecoil : MonoBehaviour
 {
-
-
     [Header("Recoil Transform")]
     [SerializeField] private Gun Weapon;
 

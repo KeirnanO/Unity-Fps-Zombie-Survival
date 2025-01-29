@@ -2,16 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using TMPro;
 
 public class NetworkGamePlayer : NetworkBehaviour
 {
-    [SyncVar]
+    [SyncVar(hook = nameof(DisplayNameHook))]
     private string displayName = "Loading...";
 
     [Header("Player's Local Space")]
     [SerializeField] private GameObject localSpace;
     [Header("Player model that other clients see")]
     [SerializeField] private GameObject clientPlayerObject;
+
+    [Header("Temp space for NameText")]
+    [SerializeField] private TextMeshProUGUI playerNameText;
 
     private NetworkLobbyManager lobby;
     private NetworkLobbyManager Lobby
@@ -21,6 +25,11 @@ public class NetworkGamePlayer : NetworkBehaviour
             if (lobby != null) { return lobby; }
             return lobby = NetworkManager.singleton as NetworkLobbyManager;
         }
+    }
+
+    private void Start()
+    {
+        DisplayNameHook("", displayName);
     }
 
     public override void OnStartLocalPlayer()
@@ -40,6 +49,14 @@ public class NetworkGamePlayer : NetworkBehaviour
     public override void OnStopServer()
     {
         Lobby.GamePlayers.Remove(this);
+    }
+
+    public void DisplayNameHook(string _oldString, string _newString)
+    {
+        displayName = _newString;
+
+        if(playerNameText != null)
+            playerNameText.text = displayName;
     }
 
     [Server]
@@ -79,6 +96,11 @@ public class NetworkGamePlayer : NetworkBehaviour
 
         }
     }
+
+    [TargetRpc]
+    public virtual void Init()
+    {
+    } 
 
     public string GetDisplayName()
     {

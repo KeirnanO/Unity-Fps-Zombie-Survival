@@ -297,19 +297,26 @@ MonoBehaviour:
   - {fileID: 7324563643474405169, guid: ffcb9c5ee31b2f64fbb8d82793773f9d, type: 3}
   - {fileID: 3965432176977265068, guid: d554030b5a930474cbf97bfc1cb9e1e8, type: 3}
   - {fileID: 130924058580275952, guid: 05af8308aad4888428faf95a5650cb6b, type: 3}
+  - {fileID: 6217008103514422794, guid: a87bafa1e9d7b6e4584a58778c591447, type: 3}
+  - {fileID: 3566296749416908628, guid: 563a4ff1d0f782548968da9e192a3bca, type: 3}
+  - {fileID: 5676647716978657467, guid: d91a31890ff5c564bb7618ce273a2dc2, type: 3}
+  - {fileID: 8667831668201398, guid: f7e6cec3748596b419bfd3ddc7b7ff9e, type: 3}
+  - {fileID: 6429957388873075226, guid: dc6bad40eb31242449f6b3cc2c1d6695, type: 3}
   timeInterpolationGui: 0
   minPlayers: 1
   menuScene: Menus
-  gameScene: Scene_Map_02
+  gameScene: Scene_Map_Factory
   lobbyPlayerPrefab: {fileID: 4811988073140808898, guid: 4c39b7b23685208468fdecd1375d7879,
     type: 3}
-  gamePlayerPrefab: {fileID: 351320542542366478, guid: ef51eea017beb0d45bc04f6a718ccbfc,
+  gamePlayerPrefab: {fileID: 3566296749416908625, guid: 563a4ff1d0f782548968da9e192a3bca,
     type: 3}
   playerSpawnSystem: {fileID: 4526207791641660906, guid: bd060d9b49aba894dbeddb66952e37b2,
     type: 3}
   chestSpawnSystem: {fileID: 5921185622108270780, guid: 2214c6fac1f56724ba5d78f70a79c9c5,
     type: 3}
   zombieSpawnSystem: {fileID: 7187632511111297006, guid: 006ed94316dfe4c4faf8a8fde31d7e33,
+    type: 3}
+  enemySpawnSystem: {fileID: 8667831668201398, guid: f7e6cec3748596b419bfd3ddc7b7ff9e,
     type: 3}
   GamePlayers: []
 --- !u!114 &356510545

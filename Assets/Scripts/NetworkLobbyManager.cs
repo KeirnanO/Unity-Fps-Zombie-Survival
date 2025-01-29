@@ -19,6 +19,7 @@ public class NetworkLobbyManager : NetworkManager
     [SerializeField] private GameObject playerSpawnSystem = null;
     [SerializeField] private GameObject chestSpawnSystem = null;
     [SerializeField] private GameObject zombieSpawnSystem = null;
+    [SerializeField] private GameObject enemySpawnSystem = null;
 
     public static event Action OnClientConnected;
     public static event Action OnClientDisconnected;
@@ -64,6 +65,7 @@ public class NetworkLobbyManager : NetworkManager
             return;
         }
 
+        //Joined after the server has started
         if (SceneManager.GetActiveScene().name != menuScene)
         {
             conn.Disconnect();
@@ -143,15 +145,20 @@ public class NetworkLobbyManager : NetworkManager
 
         if (sceneName.StartsWith("Scene_Map"))
         {
-            GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
-            NetworkServer.Spawn(playerSpawnSystemInstance);
+            //GameObject playerSpawnSystemInstance = Instantiate(playerSpawnSystem);
+            //NetworkServer.Spawn(playerSpawnSystemInstance);
 
-            GameObject chestSpawnSystemInstance = Instantiate(chestSpawnSystem);
-            NetworkServer.Spawn(chestSpawnSystemInstance);
+            //GameObject chestSpawnSystemInstance = Instantiate(chestSpawnSystem);
+            //NetworkServer.Spawn(chestSpawnSystemInstance);
 
             //Only Server should handle zombie spawning
-            GameObject zombieSpawnSystemInstance = Instantiate(zombieSpawnSystem);
+            //GameObject zombieSpawnSystemInstance = Instantiate(zombieSpawnSystem);
             //NetworkServer.Spawn(zombieSpawnSystemInstance);
+
+            if(sceneName.Contains("Factory"))
+            {
+                GameObject enemySpawnSystemInstance = Instantiate(enemySpawnSystem);
+            }
         }
     }
 
@@ -171,12 +178,12 @@ public class NetworkLobbyManager : NetworkManager
             for (int i = GamePlayers.Count - 1; i >= 0; i--)
             {
                 //RPG Games
-                GamePlayers[i].GetComponent<NetworkMovementController>().RpcSetPositionAndRotation(NetworkPlayerSpawnSystem.spawnPoints[i].position, NetworkPlayerSpawnSystem.spawnPoints[i].rotation);
+                //GamePlayers[i].GetComponent<NetworkMovementController>().RpcSetPositionAndRotation(NetworkPlayerSpawnSystem.spawnPoints[i].position, NetworkPlayerSpawnSystem.spawnPoints[i].rotation);
 
                 //Board Game
                 //AzulGameManager.instance.SetUpGame();
                 //
-                
+                GamePlayers[i].Init();
             }
         }
     }

@@ -1680,7 +1680,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7640919110998861286
 Transform:
   m_ObjectHideFlags: 0
@@ -1788,6 +1788,7 @@ MonoBehaviour:
     type: 3}
   IKTargets: {fileID: 8034774668860357640}
   animator: {fileID: 7008216601244008287}
+  clientAnimator: {fileID: 0}
   audioSource: {fileID: 0}
   IsAiming: 0
   recoil: {fileID: 0}
@@ -1837,6 +1838,7 @@ MonoBehaviour:
   RightMiddleHint: {fileID: 0}
   RightRingHint: {fileID: 0}
   RightPinkyHint: {fileID: 0}
+  IKTargets: {fileID: 0}
 --- !u!82 &6970204989777423090
 AudioSource:
   m_ObjectHideFlags: 0

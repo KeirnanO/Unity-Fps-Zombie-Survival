@@ -258,6 +258,7 @@ public class NetworkMovementController : NetworkBehaviour
 		{
 			_speed = targetSpeed;
 		}
+
 		// normalise input direction
 		Vector3 inputDirection = new Vector3(previousInput.x, 0.0f, previousInput.y).normalized;
 
